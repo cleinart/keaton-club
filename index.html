@@ -258,7 +258,7 @@
 <header>
   <img class="header-photo" src="header-photo.png" alt="Diane Keaton laughing, wearing her signature hat and glasses">
   <h1>The La-Dee-Da Society</h1>
-  <p class="tagline">"La-dee-da, la-dee-da..." — a year-long Diane Keaton movie marathon</p>
+  <p class="tagline">"La-dee-da, la-dee-da..." — Annie Hall's signature line, and now our year-long Diane Keaton movie marathon</p>
   <p class="desc">Every film Diane Keaton ever made, watched one per week, in order, starting Monday. When the credits roll on the last one, we throw a party — everyone comes dressed as Diane, or as one of her characters.</p>
   <div class="stats">
     <div class="stat"><b id="statTotal">55</b><span>Films</span></div>
@@ -287,9 +287,10 @@
 
 <script>
 /* ============================================================
-   GISCUS CONFIG — fill these in after you set up GitHub Pages +
-   giscus (see the setup guide). Until you do, comments will show
-   a friendly placeholder instead of a broken widget.
+   GISCUS CONFIG — connected to the keaton-club repo/Discussions.
+   Each movie still gets its own separate comment thread (see
+   data-mapping="specific" + per-week data-term in loadComments
+   below) — only the shared repo/category identity lives here.
    ============================================================ */
 const GISCUS_REPO = "cleinart/keaton-club";
 const GISCUS_REPO_ID = "R_kgDOTrNYWQ";
@@ -610,8 +611,8 @@ function loadComments(panel, term){
   script.setAttribute('data-strict', '0');
   script.setAttribute('data-reactions-enabled', '1');
   script.setAttribute('data-emit-metadata', '0');
-  script.setAttribute('data-input-position', 'top');
-  script.setAttribute('data-theme', 'light');
+  script.setAttribute('data-input-position', 'bottom');
+  script.setAttribute('data-theme', 'preferred_color_scheme');
   script.setAttribute('data-lang', 'en');
   script.setAttribute('crossorigin', 'anonymous');
   script.async = true;
