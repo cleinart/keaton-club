@@ -115,6 +115,14 @@
     cursor:pointer;
     font-size:.82rem;
   }
+  .namebox button#githubSignOut{
+    background:transparent;
+    color:var(--gold);
+  }
+  .watch-check.locked{
+    opacity:.5;
+    cursor:not-allowed;
+  }
   .controls{
     max-width:900px;
     margin:28px auto 0;
@@ -300,10 +308,10 @@
   <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 </header>
 
-<div class="namebox" id="nameBox" style="display:none;">
-  <label for="nameInput">Your name, so "Watched" follows you across devices:</label>
-  <input type="text" id="nameInput" placeholder="e.g. Christi">
-  <button id="nameSave">Save</button>
+<div class="namebox" id="authBox" style="display:none;">
+  <span id="authStatus">Sign in with GitHub to track what you've watched across your devices.</span>
+  <button id="githubSignIn">Sign in with GitHub</button>
+  <button id="githubSignOut" style="display:none;">Sign out</button>
 </div>
 
 <div class="controls">
@@ -322,6 +330,7 @@
   Costume party rules: come as Diane Keaton, or as any character she ever played. Turtlenecks, fedoras, and menswear-as-womenswear strongly encouraged.
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* ============================================================
    GISCUS CONFIG — connected to the keaton-club repo/Discussions.
@@ -397,91 +406,72 @@ const MOVIES = [
 const PARTY_DATE = new Date(new Date(MOVIES[MOVIES.length-1].date).getTime() + 7*86400000);
 
 /* ============================================================
-   WATCHED STATE — synced across devices via Supabase (optional)
+   WATCHED STATE — synced across devices via Supabase Auth
    ------------------------------------------------------------
-   HOW TO TURN THIS ON:
-   1. Create a free project at supabase.com.
-   2. In the project's SQL Editor, run this once:
-
-        create table watched_status (
-          name text primary key,
-          weeks jsonb not null default '[]'::jsonb,
-          updated_at timestamptz default now()
-        );
-        alter table watched_status enable row level security;
-        create policy "public read" on watched_status
-          for select using (true);
-        create policy "public write" on watched_status
-          for insert with check (true);
-        create policy "public update" on watched_status
-          for update using (true);
-
-   3. In Project Settings → API, copy the "Project URL" and the
-      "anon public" key into the two constants below.
-
-   Until both are filled in, watched checkmarks just stay local to
-   each browser (same as before) — nothing else breaks.
-
-   Note on privacy: the policies above let anyone with your Project
-   URL/key read and write this one table. That's fine for a private
-   friend-group watch tracker (nothing sensitive is stored — just
-   names and week numbers), but don't reuse this project for
-   anything you'd want locked down.
+   Each person signs in with their own GitHub account (the same
+   kind of account they already use to comment), and their
+   watched list follows that account to any device/browser.
+   See SETUP_GUIDE.md for the one-time GitHub OAuth App + Supabase
+   configuration steps. Until that's done, SUPABASE_CONFIGURED
+   stays false and watched checkmarks just stay local to each
+   browser — nothing else breaks.
    ============================================================ */
 const SUPABASE_URL = "https://hhwfhjqehenknxzqzgkt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_NYJTJMiaJ2_o_e8pQZqg_g_2twQar0k";
 const SUPABASE_CONFIGURED = !SUPABASE_URL.startsWith("PASTE") && !SUPABASE_ANON_KEY.startsWith("PASTE");
 
-const NAME_KEY = "keatonClubName";
-function getMyName(){ return localStorage.getItem(NAME_KEY) || ""; }
-function setMyName(name){ localStorage.setItem(NAME_KEY, name.trim()); }
+let sbClient = null;
+let currentSession = null;
+if(SUPABASE_CONFIGURED && window.supabase){
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
 const WATCHED_KEY = "keatonClubWatched";
 function getWatched(){ try{ return JSON.parse(localStorage.getItem(WATCHED_KEY) || "{}"); }catch(e){ return {}; } }
 function setWatchedLocal(obj){ localStorage.setItem(WATCHED_KEY, JSON.stringify(obj)); }
 
-async function fetchRemoteWatched(name){
-  if(!SUPABASE_CONFIGURED || !name) return null;
+function githubUsername(session){
+  if(!session) return "";
+  const meta = session.user.user_metadata || {};
+  return meta.user_name || meta.preferred_username || "GitHub user";
+}
+
+async function fetchRemoteWatched(){
+  if(!sbClient || !currentSession) return null;
   try{
-    const url = SUPABASE_URL + "/rest/v1/watched_status?name=eq." + encodeURIComponent(name) + "&select=weeks";
-    const res = await fetch(url, {
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
-    });
-    if(!res.ok) return null;
-    const rows = await res.json();
-    if(rows && rows[0] && Array.isArray(rows[0].weeks)) return rows[0].weeks;
-    return [];
+    const { data, error } = await sbClient
+      .from('watched_status')
+      .select('weeks')
+      .eq('user_id', currentSession.user.id)
+      .maybeSingle();
+    if(error){ console.warn("watched sync fetch failed", error); return null; }
+    return data && Array.isArray(data.weeks) ? data.weeks : [];
   }catch(e){ console.warn("watched sync fetch failed", e); return null; }
 }
 
-async function pushRemoteWatched(name, weeksArray){
-  if(!SUPABASE_CONFIGURED || !name) return;
+async function pushRemoteWatched(weeksArray){
+  if(!sbClient || !currentSession) return;
   try{
-    await fetch(SUPABASE_URL + "/rest/v1/watched_status", {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: "Bearer " + SUPABASE_ANON_KEY,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates"
-      },
-      body: JSON.stringify({ name: name, weeks: weeksArray, updated_at: new Date().toISOString() })
+    const { error } = await sbClient.from('watched_status').upsert({
+      user_id: currentSession.user.id,
+      github_username: githubUsername(currentSession),
+      weeks: weeksArray,
+      updated_at: new Date().toISOString()
     });
+    if(error) console.warn("watched sync push failed", error);
   }catch(e){ console.warn("watched sync push failed", e); }
 }
 
 function setWatched(obj){
   setWatchedLocal(obj);
-  const name = getMyName();
-  if(SUPABASE_CONFIGURED && name){
-    pushRemoteWatched(name, Object.keys(obj).map(Number));
+  if(sbClient && currentSession){
+    pushRemoteWatched(Object.keys(obj).map(Number));
   }
 }
 
 async function syncWatchedFromRemote(){
-  const name = getMyName();
-  if(!SUPABASE_CONFIGURED || !name) return;
-  const weeks = await fetchRemoteWatched(name);
+  if(!sbClient || !currentSession) return;
+  const weeks = await fetchRemoteWatched();
   if(weeks){
     const obj = {};
     weeks.forEach(w=> obj[w] = true);
@@ -629,6 +619,7 @@ function render(){
   const watched = getWatched();
   const curWeek = currentWeekNumber();
   const term = searchTerm.trim().toLowerCase();
+  const needsLogin = SUPABASE_CONFIGURED && !currentSession;
 
   let list = MOVIES.filter(m=>{
     if(term && !(m.title.toLowerCase().includes(term) || String(m.year).includes(term))) return false;
@@ -659,7 +650,7 @@ function render(){
             <a href="${justWatchUrl(m.title)}" target="_blank" rel="noopener">📺 Where to stream</a>
             <a href="${m.info || wikiUrl(m.slug)}" target="_blank" rel="noopener">ℹ️ About the film</a>
             <span class="comment-toggle" data-week="${m.week}" data-term="${term}">💬 Comments</span>
-            <label class="watch-check"><input type="checkbox" data-week="${m.week}" ${watched[m.week] ? "checked" : ""}> Watched</label>
+            <label class="watch-check${needsLogin ? ' locked' : ''}" title="${needsLogin ? 'Sign in with GitHub above to track watched movies' : ''}"><input type="checkbox" data-week="${m.week}" ${watched[m.week] ? "checked" : ""} ${needsLogin ? "disabled" : ""}> Watched</label>
           </div>
         </div>
       </div>
@@ -799,27 +790,57 @@ document.getElementById('jumpCurrent').addEventListener('click', ()=>{
 });
 
 /* ============================================================
-   NAME BOX (only shown once Supabase is configured)
+   GITHUB SIGN-IN (only active once Supabase + the GitHub OAuth
+   App are both configured — see SETUP_GUIDE.md)
    ============================================================ */
-const nameBox = document.getElementById('nameBox');
-const nameInput = document.getElementById('nameInput');
-if(SUPABASE_CONFIGURED){
-  nameBox.style.display = 'flex';
-  nameInput.value = getMyName();
-  document.getElementById('nameSave').addEventListener('click', async ()=>{
-    setMyName(nameInput.value);
-    nameInput.value = getMyName();
-    await syncWatchedFromRemote();
+const authBox = document.getElementById('authBox');
+const authStatus = document.getElementById('authStatus');
+const signInBtn = document.getElementById('githubSignIn');
+const signOutBtn = document.getElementById('githubSignOut');
+
+function updateAuthUI(){
+  if(!authBox) return;
+  if(currentSession){
+    authStatus.textContent = 'Signed in as ' + githubUsername(currentSession) + ' — your watched list is synced.';
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = 'inline-block';
+  } else {
+    authStatus.textContent = "Sign in with GitHub to track what you've watched across your devices.";
+    signInBtn.style.display = 'inline-block';
+    signOutBtn.style.display = 'none';
+  }
+}
+
+if(sbClient){
+  authBox.style.display = 'flex';
+
+  signInBtn.addEventListener('click', ()=>{
+    sbClient.auth.signInWithOAuth({
+      provider: 'github',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+  });
+
+  signOutBtn.addEventListener('click', async ()=>{
+    await sbClient.auth.signOut();
+  });
+
+  // Fires immediately with whatever session already exists (or null),
+  // and again on every future sign-in/sign-out — so this one listener
+  // handles both the first render and all later updates.
+  sbClient.auth.onAuthStateChange(async (event, session)=>{
+    currentSession = session;
+    updateAuthUI();
+    if(session){
+      await syncWatchedFromRemote();
+    }
     updateStats();
     render();
   });
-}
-
-(async function init(){
-  await syncWatchedFromRemote();
+} else {
   updateStats();
   render();
-})();
+}
 </script>
 </body>
 </html>
