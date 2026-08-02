@@ -31,6 +31,16 @@
     border-bottom:2px solid var(--line);
   }
   header .hat{font-size:2.4rem;margin-bottom:6px;}
+  header .header-photo{
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    object-fit:cover;
+    object-position:center 25%;
+    border:3px solid var(--gold);
+    box-shadow:0 4px 14px rgba(43,35,32,.18);
+    margin-bottom:10px;
+  }
   header h1{
     font-size:2.6rem;
     margin:0 0 8px;
@@ -246,7 +256,7 @@
 <body>
 
 <header>
-  <div class="hat">🎩</div>
+  <img class="header-photo" src="header-photo.png" alt="Diane Keaton laughing, wearing her signature hat and glasses">
   <h1>The La-Dee-Da Society</h1>
   <p class="tagline">"La-dee-da, la-dee-da..." — a year-long Diane Keaton movie marathon</p>
   <p class="desc">Every film Diane Keaton ever made, watched one per week, in order, starting Monday. When the credits roll on the last one, we throw a party — everyone comes dressed as Diane, or as one of her characters.</p>
@@ -343,7 +353,7 @@ const MOVIES = [
 {"week":50,"date":"2027-07-12","title":"Poms","year":2019,"slug":"Poms_(film)"},
 {"week":51,"date":"2027-07-19","title":"Mack & Rita","year":2022,"slug":"Mack_&_Rita"},
 {"week":52,"date":"2027-07-26","title":"Book Club: The Next Chapter","year":2023,"slug":"Book_Club:_The_Next_Chapter"},
-{"week":53,"date":"2027-08-02","title":"Maybe I Do","year":2023,"slug":"Maybe_I_Do_(film)"},
+{"week":53,"date":"2027-08-02","title":"Maybe I Do","year":2023,"slug":"Maybe_I_Do"},
 {"week":54,"date":"2027-08-09","title":"Summer Camp","year":2024,"slug":"Summer_Camp_(2024_film)"},
 {"week":55,"date":"2027-08-16","title":"Arthur's Whisky","year":2024,"slug":"Arthur's_Whisky"}
 ];
@@ -377,23 +387,39 @@ function currentWeekNumber(){
 /* ============================================================
    POSTER PHOTOS
    ------------------------------------------------------------
-   By default this pulls each film's real poster/still straight
-   from Wikipedia's public picture API (no key needed, works in
-   any normal browser with internet access — this is a live
-   network call, so it needs to be opened as an actual page, not
-   previewed inside a sandboxed viewer).
+   HOW TO ADD YOUR OWN PHOTOS (recommended — no coding needed):
+   1. In your GitHub repo, create a folder called "posters".
+   2. Add an image for a movie named after its WEEK NUMBER, e.g.
+      "9.jpg" for week 9 (Annie Hall). Any of .jpg/.jpeg/.png/.webp
+      works. Portrait photos (taller than wide) look best.
+   3. Commit. That's it — the site checks this folder first,
+      automatically, for every card.
 
-   If a particular movie doesn't find a good image (some titles
-   are obscure enough that Wikipedia's article search misses),
-   or you just want to swap in a specific photo, paste a direct
-   image URL here. Right-click any photo online → "Copy image
-   address" → paste it as the value. Example:
-     const MANUAL_POSTERS = { 9: "https://example.com/annie-hall.jpg" };
-   The number is the week number from the schedule above.
+   If a week doesn't have an uploaded photo, the site falls back
+   to trying to auto-fetch a poster from Wikipedia (best-effort —
+   depends on the visitor's browser/network and may not always
+   work), and finally to a plain letter placeholder.
+
+   You can also paste a direct image URL for a specific week
+   instead of uploading a file, via MANUAL_POSTERS below —
+   whichever this finds first (upload, then this list, then
+   Wikipedia) wins.
    ============================================================ */
+const POSTER_FOLDER = "posters/";
+const POSTER_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+
 const MANUAL_POSTERS = {
   // 9: "https://your-image-url-here.jpg",
 };
+
+function tryLoadImage(url){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = ()=> resolve(null);
+    img.src = url;
+  });
+}
 
 const posterCache = {};
 function withTimeout(promise, ms){
@@ -422,17 +448,41 @@ async function openSearchFallback(title){
     return null;
   }catch(e){ console.warn("opensearch fallback failed for", title, e); return null; }
 }
-async function getPoster(movie){
-  if(MANUAL_POSTERS[movie.week]) return MANUAL_POSTERS[movie.week];
-  if(posterCache[movie.slug]) return posterCache[movie.slug];
+async function wikipediaPosterUrl(movie){
   const plainTitle = movie.title.replace(/ /g,"_");
   let url = await fetchSummary(movie.slug);
   if(!url) url = await fetchSummary(plainTitle + "_(film)");
   if(!url) url = await fetchSummary(plainTitle + "_(" + movie.year + "_film)");
   if(!url) url = await fetchSummary(plainTitle);
   if(!url) url = await openSearchFallback(movie.title);
-  posterCache[movie.slug] = url;
   return url;
+}
+
+// Returns a loaded <img> element (ready to insert), or null if nothing worked.
+async function getPosterImage(movie){
+  if(posterCache[movie.week]) return posterCache[movie.week];
+
+  // 1. an uploaded file in /posters, tried by extension
+  for(const ext of POSTER_EXTENSIONS){
+    const img = await tryLoadImage(POSTER_FOLDER + movie.week + "." + ext);
+    if(img){ posterCache[movie.week] = img; return img; }
+  }
+
+  // 2. a manually pasted direct URL
+  if(MANUAL_POSTERS[movie.week]){
+    const img = await tryLoadImage(MANUAL_POSTERS[movie.week]);
+    if(img){ posterCache[movie.week] = img; return img; }
+  }
+
+  // 3. best-effort live Wikipedia lookup
+  const wikiPosterUrl = await wikipediaPosterUrl(movie);
+  if(wikiPosterUrl){
+    const img = await tryLoadImage(wikiPosterUrl);
+    if(img){ posterCache[movie.week] = img; return img; }
+  }
+
+  posterCache[movie.week] = null;
+  return null;
 }
 
 /* ============================================================
@@ -495,16 +545,14 @@ function render(){
     `;
     grid.appendChild(card);
 
-    getPoster(m).then(url=>{
+    getPosterImage(m).then(img=>{
       const t = document.getElementById("thumb-" + m.week);
       if(!t) return;
-      if(url){
-        const img = new Image();
-        img.onload = ()=>{ t.classList.add('loaded'); t.innerHTML = ''; t.appendChild(img); };
-        img.onerror = ()=>{ t.classList.add('loaded','placeholder'); t.textContent = m.title.trim()[0]; };
+      if(img){
         img.alt = m.title + " poster";
-        img.loading = "lazy";
-        img.src = url;
+        t.classList.add('loaded');
+        t.innerHTML = '';
+        t.appendChild(img);
       } else {
         t.classList.add('loaded','placeholder');
         t.textContent = m.title.trim()[0];
