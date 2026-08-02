@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The La-Dee-Da Society — A Diane Keaton Movie Marathon</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%A9</text></svg>">
 <style>
   :root{
     --cream:#faf3e8;
@@ -83,6 +84,36 @@
     background:linear-gradient(90deg,var(--terracotta),var(--gold));
     width:0%;
     transition:width .6s ease;
+  }
+  .namebox{
+    max-width:900px;
+    margin:22px auto 0;
+    padding:10px 20px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    font-size:.82rem;
+    color:#6b5c4d;
+  }
+  .namebox input[type=text]{
+    padding:6px 12px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    font-family:inherit;
+    font-size:.85rem;
+    background:var(--card);
+  }
+  .namebox button{
+    padding:6px 14px;
+    border-radius:16px;
+    border:1px solid var(--gold);
+    background:var(--gold);
+    color:#fff;
+    font-family:inherit;
+    cursor:pointer;
+    font-size:.82rem;
   }
   .controls{
     max-width:900px;
@@ -261,13 +292,19 @@
   <p class="tagline">"La-dee-da, la-dee-da..." — Annie Hall's signature line, and now our year-long Diane Keaton movie marathon</p>
   <p class="desc">Every film Diane Keaton ever made, watched one per week, in order, starting Monday. When the credits roll on the last one, we throw a party — everyone comes dressed as Diane, or as one of her characters.</p>
   <div class="stats">
-    <div class="stat"><b id="statTotal">55</b><span>Films</span></div>
-    <div class="stat"><b id="statWeeks">55</b><span>Weeks</span></div>
+    <div class="stat"><b id="statTotal">53</b><span>Films</span></div>
+    <div class="stat"><b id="statWeeks">53</b><span>Weeks</span></div>
     <div class="stat"><b id="statWatched">0</b><span>Watched</span></div>
     <div class="stat"><b id="statParty">—</b><span>Party Date</span></div>
   </div>
   <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 </header>
+
+<div class="namebox" id="nameBox" style="display:none;">
+  <label for="nameInput">Your name, so "Watched" follows you across devices:</label>
+  <input type="text" id="nameInput" placeholder="e.g. Christi">
+  <button id="nameSave">Save</button>
+</div>
 
 <div class="controls">
   <input type="text" id="searchBox" placeholder="Search a title or year…">
@@ -309,7 +346,7 @@ const MOVIES = [
 {"week":5,"date":"2026-08-31","title":"The Godfather Part II","year":1974,"slug":"The_Godfather_Part_II"},
 {"week":6,"date":"2026-09-07","title":"Love and Death","year":1975,"slug":"Love_and_Death"},
 {"week":7,"date":"2026-09-14","title":"Harry and Walter Go to New York","year":1976,"slug":"Harry_and_Walter_Go_to_New_York"},
-{"week":8,"date":"2026-09-21","title":"I Will, I Will... For Now","year":1976,"slug":"I_Will,_I_Will..._For_Now"},
+{"week":8,"date":"2026-09-21","title":"I Will, I Will... for Now","year":1976,"slug":"I_Will,_I_Will..._for_Now"},
 {"week":9,"date":"2026-09-28","title":"Annie Hall","year":1977,"slug":"Annie_Hall"},
 {"week":10,"date":"2026-10-05","title":"Looking for Mr. Goodbar","year":1977,"slug":"Looking_for_Mr._Goodbar_(film)"},
 {"week":11,"date":"2026-10-12","title":"Interiors","year":1978,"slug":"Interiors"},
@@ -320,53 +357,137 @@ const MOVIES = [
 {"week":16,"date":"2026-11-16","title":"Mrs. Soffel","year":1984,"slug":"Mrs._Soffel"},
 {"week":17,"date":"2026-11-23","title":"Crimes of the Heart","year":1986,"slug":"Crimes_of_the_Heart_(film)"},
 {"week":18,"date":"2026-11-30","title":"Baby Boom","year":1987,"slug":"Baby_Boom_(film)"},
-{"week":19,"date":"2026-12-07","title":"Radio Days","year":1987,"slug":"Radio_Days"},
-{"week":20,"date":"2026-12-14","title":"Heaven","year":1987,"slug":"Heaven_(1987_film)"},
-{"week":21,"date":"2026-12-21","title":"The Good Mother","year":1988,"slug":"The_Good_Mother_(1988_film)"},
-{"week":22,"date":"2026-12-28","title":"The Lemon Sisters","year":1990,"slug":"The_Lemon_Sisters"},
-{"week":23,"date":"2027-01-04","title":"The Godfather Part III","year":1990,"slug":"The_Godfather_Part_III"},
-{"week":24,"date":"2027-01-11","title":"Father of the Bride","year":1991,"slug":"Father_of_the_Bride_(1991_film)"},
-{"week":25,"date":"2027-01-18","title":"Manhattan Murder Mystery","year":1993,"slug":"Manhattan_Murder_Mystery"},
-{"week":26,"date":"2027-01-25","title":"Look Who's Talking Now","year":1993,"slug":"Look_Who's_Talking_Now"},
-{"week":27,"date":"2027-02-01","title":"Father of the Bride Part II","year":1995,"slug":"Father_of_the_Bride_Part_II"},
-{"week":28,"date":"2027-02-08","title":"Unstrung Heroes","year":1995,"slug":"Unstrung_Heroes"},
-{"week":29,"date":"2027-02-15","title":"Marvin's Room","year":1996,"slug":"Marvin's_Room_(film)"},
-{"week":30,"date":"2027-02-22","title":"The First Wives Club","year":1996,"slug":"The_First_Wives_Club"},
-{"week":31,"date":"2027-03-01","title":"The Other Sister","year":1999,"slug":"The_Other_Sister"},
-{"week":32,"date":"2027-03-08","title":"Hanging Up","year":2000,"slug":"Hanging_Up_(film)"},
-{"week":33,"date":"2027-03-15","title":"Town & Country","year":2001,"slug":"Town_&_Country_(film)"},
-{"week":34,"date":"2027-03-22","title":"Something's Gotta Give","year":2003,"slug":"Something's_Gotta_Give_(film)"},
-{"week":35,"date":"2027-03-29","title":"The Family Stone","year":2005,"slug":"The_Family_Stone"},
-{"week":36,"date":"2027-04-05","title":"Rumor Has It","year":2005,"slug":"Rumor_Has_It"},
-{"week":37,"date":"2027-04-12","title":"Because I Said So","year":2007,"slug":"Because_I_Said_So"},
-{"week":38,"date":"2027-04-19","title":"Mama's Boy","year":2007,"slug":"Mama's_Boy_(2007_film)"},
-{"week":39,"date":"2027-04-26","title":"Mad Money","year":2008,"slug":"Mad_Money_(film)"},
-{"week":40,"date":"2027-05-03","title":"Smother","year":2008,"slug":"Smother_(film)"},
-{"week":41,"date":"2027-05-10","title":"Morning Glory","year":2010,"slug":"Morning_Glory_(2010_film)"},
-{"week":42,"date":"2027-05-17","title":"Darling Companion","year":2012,"slug":"Darling_Companion"},
-{"week":43,"date":"2027-05-24","title":"The Big Wedding","year":2013,"slug":"The_Big_Wedding"},
-{"week":44,"date":"2027-05-31","title":"And So It Goes","year":2014,"slug":"And_So_It_Goes_(film)"},
-{"week":45,"date":"2027-06-07","title":"5 Flights Up","year":2014,"slug":"5_Flights_Up"},
-{"week":46,"date":"2027-06-14","title":"Love the Coopers","year":2015,"slug":"Love_the_Coopers"},
-{"week":47,"date":"2027-06-21","title":"Finding Dory","year":2016,"slug":"Finding_Dory"},
-{"week":48,"date":"2027-06-28","title":"Hampstead","year":2017,"slug":"Hampstead_(film)"},
-{"week":49,"date":"2027-07-05","title":"Book Club","year":2018,"slug":"Book_Club_(film)"},
-{"week":50,"date":"2027-07-12","title":"Poms","year":2019,"slug":"Poms_(film)"},
-{"week":51,"date":"2027-07-19","title":"Mack & Rita","year":2022,"slug":"Mack_&_Rita"},
-{"week":52,"date":"2027-07-26","title":"Book Club: The Next Chapter","year":2023,"slug":"Book_Club:_The_Next_Chapter"},
-{"week":53,"date":"2027-08-02","title":"Maybe I Do","year":2023,"slug":"Maybe_I_Do"},
-{"week":54,"date":"2027-08-09","title":"Summer Camp","year":2024,"slug":"Summer_Camp_(2024_film)"},
-{"week":55,"date":"2027-08-16","title":"Arthur's Whisky","year":2024,"slug":"Arthur's_Whisky"}
+{"week":19,"date":"2026-12-07","title":"The Good Mother","year":1988,"slug":"The_Good_Mother_(1988_film)"},
+{"week":20,"date":"2026-12-14","title":"The Lemon Sisters","year":1990,"slug":"The_Lemon_Sisters"},
+{"week":21,"date":"2026-12-21","title":"The Godfather Part III","year":1990,"slug":"The_Godfather_Part_III"},
+{"week":22,"date":"2026-12-28","title":"Father of the Bride","year":1991,"slug":"Father_of_the_Bride_(1991_film)"},
+{"week":23,"date":"2027-01-04","title":"Manhattan Murder Mystery","year":1993,"slug":"Manhattan_Murder_Mystery"},
+{"week":24,"date":"2027-01-11","title":"Look Who's Talking Now","year":1993,"slug":"Look_Who's_Talking_Now"},
+{"week":25,"date":"2027-01-18","title":"Father of the Bride Part II","year":1995,"slug":"Father_of_the_Bride_Part_II"},
+{"week":26,"date":"2027-01-25","title":"Marvin's Room","year":1996,"slug":"Marvin's_Room_(film)"},
+{"week":27,"date":"2027-02-01","title":"The First Wives Club","year":1996,"slug":"The_First_Wives_Club"},
+{"week":28,"date":"2027-02-08","title":"The Other Sister","year":1999,"slug":"The_Other_Sister"},
+{"week":29,"date":"2027-02-15","title":"Hanging Up","year":2000,"slug":"Hanging_Up_(film)"},
+{"week":30,"date":"2027-02-22","title":"Plan B","year":2001,"slug":"Plan_B_(2001_film)","info":"https://www.imdb.com/title/tt0249082/"},
+{"week":31,"date":"2027-03-01","title":"Town & Country","year":2001,"slug":"Town_&_Country_(film)"},
+{"week":32,"date":"2027-03-08","title":"Sister Mary Explains It All","year":2001,"slug":"Sister_Mary_Explains_It_All"},
+{"week":33,"date":"2027-03-15","title":"Something's Gotta Give","year":2003,"slug":"Something's_Gotta_Give_(film)"},
+{"week":34,"date":"2027-03-22","title":"The Family Stone","year":2005,"slug":"The_Family_Stone"},
+{"week":35,"date":"2027-03-29","title":"Because I Said So","year":2007,"slug":"Because_I_Said_So"},
+{"week":36,"date":"2027-04-05","title":"Mama's Boy","year":2007,"slug":"Mama's_Boy_(2007_film)"},
+{"week":37,"date":"2027-04-12","title":"Mad Money","year":2008,"slug":"Mad_Money_(film)"},
+{"week":38,"date":"2027-04-19","title":"Smother","year":2008,"slug":"Smother_(film)"},
+{"week":39,"date":"2027-04-26","title":"Morning Glory","year":2010,"slug":"Morning_Glory_(2010_film)"},
+{"week":40,"date":"2027-05-03","title":"Darling Companion","year":2012,"slug":"Darling_Companion"},
+{"week":41,"date":"2027-05-10","title":"The Big Wedding","year":2013,"slug":"The_Big_Wedding"},
+{"week":42,"date":"2027-05-17","title":"And So It Goes","year":2014,"slug":"And_So_It_Goes_(film)"},
+{"week":43,"date":"2027-05-24","title":"5 Flights Up","year":2014,"slug":"5_Flights_Up"},
+{"week":44,"date":"2027-05-31","title":"Love the Coopers","year":2015,"slug":"Love_the_Coopers"},
+{"week":45,"date":"2027-06-07","title":"Finding Dory","year":2016,"slug":"Finding_Dory"},
+{"week":46,"date":"2027-06-14","title":"Hampstead","year":2017,"slug":"Hampstead_(film)"},
+{"week":47,"date":"2027-06-21","title":"Book Club","year":2018,"slug":"Book_Club_(film)"},
+{"week":48,"date":"2027-06-28","title":"Poms","year":2019,"slug":"Poms_(film)"},
+{"week":49,"date":"2027-07-05","title":"Mack & Rita","year":2022,"slug":"Mack_&_Rita"},
+{"week":50,"date":"2027-07-12","title":"Book Club: The Next Chapter","year":2023,"slug":"Book_Club:_The_Next_Chapter"},
+{"week":51,"date":"2027-07-19","title":"Maybe I Do","year":2023,"slug":"Maybe_I_Do"},
+{"week":52,"date":"2027-07-26","title":"Summer Camp","year":2024,"slug":"Summer_Camp_(2024_film)"},
+{"week":53,"date":"2027-08-02","title":"Arthur's Whisky","year":2024,"slug":"Arthur's_Whisky"}
 ];
 
 const PARTY_DATE = new Date(new Date(MOVIES[MOVIES.length-1].date).getTime() + 7*86400000);
 
 /* ============================================================
-   STATE (per-browser only — "watched" checkmarks are local)
+   WATCHED STATE — synced across devices via Supabase (optional)
+   ------------------------------------------------------------
+   HOW TO TURN THIS ON:
+   1. Create a free project at supabase.com.
+   2. In the project's SQL Editor, run this once:
+
+        create table watched_status (
+          name text primary key,
+          weeks jsonb not null default '[]'::jsonb,
+          updated_at timestamptz default now()
+        );
+        alter table watched_status enable row level security;
+        create policy "public read" on watched_status
+          for select using (true);
+        create policy "public write" on watched_status
+          for insert with check (true);
+        create policy "public update" on watched_status
+          for update using (true);
+
+   3. In Project Settings → API, copy the "Project URL" and the
+      "anon public" key into the two constants below.
+
+   Until both are filled in, watched checkmarks just stay local to
+   each browser (same as before) — nothing else breaks.
+
+   Note on privacy: the policies above let anyone with your Project
+   URL/key read and write this one table. That's fine for a private
+   friend-group watch tracker (nothing sensitive is stored — just
+   names and week numbers), but don't reuse this project for
+   anything you'd want locked down.
    ============================================================ */
+const SUPABASE_URL = "https://hhwfhjqehenknxzqzgkt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NYJTJMiaJ2_o_e8pQZqg_g_2twQar0k";
+const SUPABASE_CONFIGURED = !SUPABASE_URL.startsWith("PASTE") && !SUPABASE_ANON_KEY.startsWith("PASTE");
+
+const NAME_KEY = "keatonClubName";
+function getMyName(){ return localStorage.getItem(NAME_KEY) || ""; }
+function setMyName(name){ localStorage.setItem(NAME_KEY, name.trim()); }
+
 const WATCHED_KEY = "keatonClubWatched";
 function getWatched(){ try{ return JSON.parse(localStorage.getItem(WATCHED_KEY) || "{}"); }catch(e){ return {}; } }
-function setWatched(obj){ localStorage.setItem(WATCHED_KEY, JSON.stringify(obj)); }
+function setWatchedLocal(obj){ localStorage.setItem(WATCHED_KEY, JSON.stringify(obj)); }
+
+async function fetchRemoteWatched(name){
+  if(!SUPABASE_CONFIGURED || !name) return null;
+  try{
+    const url = SUPABASE_URL + "/rest/v1/watched_status?name=eq." + encodeURIComponent(name) + "&select=weeks";
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) return null;
+    const rows = await res.json();
+    if(rows && rows[0] && Array.isArray(rows[0].weeks)) return rows[0].weeks;
+    return [];
+  }catch(e){ console.warn("watched sync fetch failed", e); return null; }
+}
+
+async function pushRemoteWatched(name, weeksArray){
+  if(!SUPABASE_CONFIGURED || !name) return;
+  try{
+    await fetch(SUPABASE_URL + "/rest/v1/watched_status", {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates"
+      },
+      body: JSON.stringify({ name: name, weeks: weeksArray, updated_at: new Date().toISOString() })
+    });
+  }catch(e){ console.warn("watched sync push failed", e); }
+}
+
+function setWatched(obj){
+  setWatchedLocal(obj);
+  const name = getMyName();
+  if(SUPABASE_CONFIGURED && name){
+    pushRemoteWatched(name, Object.keys(obj).map(Number));
+  }
+}
+
+async function syncWatchedFromRemote(){
+  const name = getMyName();
+  if(!SUPABASE_CONFIGURED || !name) return;
+  const weeks = await fetchRemoteWatched(name);
+  if(weeks){
+    const obj = {};
+    weeks.forEach(w=> obj[w] = true);
+    setWatchedLocal(obj);
+  }
+}
 
 /* ============================================================
    DATE HELPERS
@@ -536,7 +657,7 @@ function render(){
           <h3>${m.title} <span class="year">(${m.year})</span></h3>
           <div class="card-actions">
             <a href="${justWatchUrl(m.title)}" target="_blank" rel="noopener">📺 Where to stream</a>
-            <a href="${wikiUrl(m.slug)}" target="_blank" rel="noopener">ℹ️ About the film</a>
+            <a href="${m.info || wikiUrl(m.slug)}" target="_blank" rel="noopener">ℹ️ About the film</a>
             <span class="comment-toggle" data-week="${m.week}" data-term="${term}">💬 Comments</span>
             <label class="watch-check"><input type="checkbox" data-week="${m.week}" ${watched[m.week] ? "checked" : ""}> Watched</label>
           </div>
@@ -576,7 +697,16 @@ function render(){
       if(e.target.checked) watched[w] = true; else delete watched[w];
       setWatched(watched);
       updateStats();
-      render();
+      // Only do a full rebuild if the current filter needs to add/remove
+      // cards from view. Otherwise just restyle this one card in place,
+      // so any comment panels already open (on this or other cards)
+      // aren't torn down and reset.
+      if(filterMode === 'watched' || filterMode === 'upcoming'){
+        render();
+      } else {
+        const card = document.getElementById('week-' + w);
+        if(card) card.classList.toggle('watched', !!watched[w]);
+      }
     });
   });
 
@@ -600,6 +730,12 @@ function loadComments(panel, term){
     panel.innerHTML = '<div class="comments-placeholder">Comments aren\'t connected yet. Once the site is on GitHub Pages with giscus configured, everyone\'s comments will show up here — see the setup guide.</div>';
     return;
   }
+
+  const loading = document.createElement('div');
+  loading.className = 'comments-placeholder';
+  loading.textContent = 'Loading comments…';
+  panel.appendChild(loading);
+
   const script = document.createElement('script');
   script.src = 'https://giscus.app/client.js';
   script.setAttribute('data-repo', GISCUS_REPO);
@@ -617,6 +753,15 @@ function loadComments(panel, term){
   script.setAttribute('crossorigin', 'anonymous');
   script.async = true;
   panel.appendChild(script);
+
+  // Remove the loading message once giscus's iframe actually shows up.
+  const observer = new MutationObserver(()=>{
+    if(panel.querySelector('iframe.giscus-frame')){
+      loading.remove();
+      observer.disconnect();
+    }
+  });
+  observer.observe(panel, {childList:true, subtree:true});
 }
 
 function updateStats(){
@@ -653,8 +798,28 @@ document.getElementById('jumpCurrent').addEventListener('click', ()=>{
   }
 });
 
-updateStats();
-render();
+/* ============================================================
+   NAME BOX (only shown once Supabase is configured)
+   ============================================================ */
+const nameBox = document.getElementById('nameBox');
+const nameInput = document.getElementById('nameInput');
+if(SUPABASE_CONFIGURED){
+  nameBox.style.display = 'flex';
+  nameInput.value = getMyName();
+  document.getElementById('nameSave').addEventListener('click', async ()=>{
+    setMyName(nameInput.value);
+    nameInput.value = getMyName();
+    await syncWatchedFromRemote();
+    updateStats();
+    render();
+  });
+}
+
+(async function init(){
+  await syncWatchedFromRemote();
+  updateStats();
+  render();
+})();
 </script>
 </body>
 </html>
