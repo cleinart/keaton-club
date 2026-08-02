@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The La-Dee-Da Society — A Diane Keaton Movie Marathon</title>
+<style>
+  :root{
+    --cream:#faf3e8;
+    --blush:#e8c4b8;
+    --terracotta:#c1694f;
+    --ink:#2b2320;
+    --gold:#b8894f;
+    --card:#fffaf2;
+    --line:#e4d6c3;
+    --green:#5c7a5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Georgia','Iowan Old Style',serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.5;
+  }
+  a{color:var(--terracotta);}
+  header{
+    text-align:center;
+    padding:56px 20px 32px;
+    background:linear-gradient(180deg,#fffaf2,var(--cream));
+    border-bottom:2px solid var(--line);
+  }
+  header .hat{font-size:2.4rem;margin-bottom:6px;}
+  header h1{
+    font-size:2.6rem;
+    margin:0 0 8px;
+    letter-spacing:.5px;
+    font-weight:400;
+  }
+  header p.tagline{
+    font-size:1.1rem;
+    color:#6b5c4d;
+    margin:0 0 18px;
+    font-style:italic;
+  }
+  header p.desc{
+    max-width:620px;
+    margin:0 auto 20px;
+    font-size:.98rem;
+    color:#4a3f36;
+  }
+  .stats{
+    display:flex;
+    justify-content:center;
+    gap:28px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+  .stat{text-align:center;}
+  .stat b{display:block;font-size:1.6rem;color:var(--terracotta);font-weight:400;}
+  .stat span{font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:#8a7a68;}
+  .progress-wrap{
+    max-width:520px;
+    margin:22px auto 0;
+    background:#efe2cd;
+    border-radius:20px;
+    height:10px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .progress-bar{
+    height:100%;
+    background:linear-gradient(90deg,var(--terracotta),var(--gold));
+    width:0%;
+    transition:width .6s ease;
+  }
+  .controls{
+    max-width:900px;
+    margin:28px auto 0;
+    padding:0 20px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+  }
+  .controls input[type=text]{
+    flex:1;
+    min-width:220px;
+    padding:10px 14px;
+    border-radius:24px;
+    border:1px solid var(--line);
+    font-family:inherit;
+    font-size:.95rem;
+    background:var(--card);
+  }
+  .controls button{
+    padding:10px 18px;
+    border-radius:24px;
+    border:1px solid var(--gold);
+    background:transparent;
+    color:var(--gold);
+    font-family:inherit;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .controls button.active, .controls button:hover{
+    background:var(--gold);
+    color:#fff;
+  }
+  main{
+    max-width:900px;
+    margin:0 auto;
+    padding:30px 20px 80px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    transition:box-shadow .2s ease;
+  }
+  .card.watched{opacity:.6;}
+  .card.current{
+    border-color:var(--terracotta);
+    box-shadow:0 0 0 2px rgba(193,105,79,.25);
+  }
+  .card-main{
+    display:flex;
+    gap:16px;
+    padding:14px 16px;
+    cursor:pointer;
+  }
+  .thumb{
+    width:64px;
+    height:96px;
+    flex:0 0 64px;
+    background:linear-gradient(160deg,#e9dcc7,#dcc9a8);
+    border-radius:6px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    color:#b8a483;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .thumb.loaded{animation:none;}
+  .thumb.placeholder{
+    font-family:'Georgia',serif;
+    font-size:1.9rem;
+    color:#fff;
+    background:linear-gradient(160deg,var(--terracotta),var(--gold));
+    animation:none;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.6;}
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card-info{flex:1;min-width:0;}
+  .week-label{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--gold);
+    margin-bottom:3px;
+  }
+  .card-info h3{
+    margin:0 0 4px;
+    font-size:1.15rem;
+    font-weight:400;
+  }
+  .card-info .year{color:#8a7a68;font-size:.85rem;}
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .card-actions a, .card-actions .comment-toggle{
+    font-size:.78rem;
+    padding:5px 10px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    text-decoration:none;
+    color:#5c4d3e;
+    background:#fff;
+    cursor:pointer;
+  }
+  .card-actions a:hover, .card-actions .comment-toggle:hover{
+    border-color:var(--terracotta);
+    color:var(--terracotta);
+  }
+  .watch-check{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:.78rem;
+    color:#8a7a68;
+    white-space:nowrap;
+  }
+  .comments-panel{
+    display:none;
+    border-top:1px solid var(--line);
+    padding:16px;
+    background:#fffdf9;
+  }
+  .comments-panel.open{display:block;}
+  .comments-placeholder{
+    font-size:.85rem;
+    color:#8a7a68;
+    text-align:center;
+    padding:20px;
+    border:1px dashed var(--line);
+    border-radius:8px;
+  }
+  .party-card{
+    background:linear-gradient(135deg,var(--terracotta),var(--gold));
+    color:#fff;
+    border-radius:14px;
+    padding:28px 20px;
+    text-align:center;
+    margin-top:8px;
+  }
+  .party-card h3{margin:0 0 8px;font-size:1.4rem;font-weight:400;}
+  .party-card p{margin:0;opacity:.95;font-size:.95rem;}
+  footer{
+    text-align:center;
+    padding:30px 20px 60px;
+    color:#8a7a68;
+    font-size:.82rem;
+  }
+  .empty-state{
+    text-align:center;
+    padding:40px;
+    color:#8a7a68;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hat">🎩</div>
+  <h1>The La-Dee-Da Society</h1>
+  <p class="tagline">"La-dee-da, la-dee-da..." — a year-long Diane Keaton movie marathon</p>
+  <p class="desc">Every film Diane Keaton ever made, watched one per week, in order, starting Monday. When the credits roll on the last one, we throw a party — everyone comes dressed as Diane, or as one of her characters.</p>
+  <div class="stats">
+    <div class="stat"><b id="statTotal">55</b><span>Films</span></div>
+    <div class="stat"><b id="statWeeks">55</b><span>Weeks</span></div>
+    <div class="stat"><b id="statWatched">0</b><span>Watched</span></div>
+    <div class="stat"><b id="statParty">—</b><span>Party Date</span></div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+</header>
+
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="Search a title or year…">
+  <button id="filterAll" class="active">All</button>
+  <button id="filterUpcoming">Upcoming</button>
+  <button id="filterWatched">Watched</button>
+  <button id="jumpCurrent">This Week</button>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  Costume party rules: come as Diane Keaton, or as any character she ever played. Turtlenecks, fedoras, and menswear-as-womenswear strongly encouraged.
+</footer>
+
+<script>
+/* ============================================================
+   GISCUS CONFIG — fill these in after you set up GitHub Pages +
+   giscus (see the setup guide). Until you do, comments will show
+   a friendly placeholder instead of a broken widget.
+   ============================================================ */
+const GISCUS_REPO = "PASTE_YOUR_USERNAME/PASTE_YOUR_REPO";
+const GISCUS_REPO_ID = "PASTE_REPO_ID_HERE";
+const GISCUS_CATEGORY = "General";
+const GISCUS_CATEGORY_ID = "PASTE_CATEGORY_ID_HERE";
+const GISCUS_CONFIGURED = !GISCUS_REPO.startsWith("PASTE") && !GISCUS_REPO_ID.startsWith("PASTE") && !GISCUS_CATEGORY_ID.startsWith("PASTE");
+
+/* ============================================================
+   MOVIE DATA
+   ============================================================ */
+const MOVIES = [
+{"week":1,"date":"2026-08-03","title":"Lovers and Other Strangers","year":1970,"slug":"Lovers_and_Other_Strangers"},
+{"week":2,"date":"2026-08-10","title":"The Godfather","year":1972,"slug":"The_Godfather"},
+{"week":3,"date":"2026-08-17","title":"Play It Again, Sam","year":1972,"slug":"Play_It_Again,_Sam_(film)"},
+{"week":4,"date":"2026-08-24","title":"Sleeper","year":1973,"slug":"Sleeper_(1973_film)"},
+{"week":5,"date":"2026-08-31","title":"The Godfather Part II","year":1974,"slug":"The_Godfather_Part_II"},
+{"week":6,"date":"2026-09-07","title":"Love and Death","year":1975,"slug":"Love_and_Death"},
+{"week":7,"date":"2026-09-14","title":"Harry and Walter Go to New York","year":1976,"slug":"Harry_and_Walter_Go_to_New_York"},
+{"week":8,"date":"2026-09-21","title":"I Will, I Will... For Now","year":1976,"slug":"I_Will,_I_Will..._For_Now"},
+{"week":9,"date":"2026-09-28","title":"Annie Hall","year":1977,"slug":"Annie_Hall"},
+{"week":10,"date":"2026-10-05","title":"Looking for Mr. Goodbar","year":1977,"slug":"Looking_for_Mr._Goodbar_(film)"},
+{"week":11,"date":"2026-10-12","title":"Interiors","year":1978,"slug":"Interiors"},
+{"week":12,"date":"2026-10-19","title":"Manhattan","year":1979,"slug":"Manhattan_(1979_film)"},
+{"week":13,"date":"2026-10-26","title":"Reds","year":1981,"slug":"Reds_(film)"},
+{"week":14,"date":"2026-11-02","title":"Shoot the Moon","year":1982,"slug":"Shoot_the_Moon"},
+{"week":15,"date":"2026-11-09","title":"The Little Drummer Girl","year":1984,"slug":"The_Little_Drummer_Girl_(film)"},
+{"week":16,"date":"2026-11-16","title":"Mrs. Soffel","year":1984,"slug":"Mrs._Soffel"},
+{"week":17,"date":"2026-11-23","title":"Crimes of the Heart","year":1986,"slug":"Crimes_of_the_Heart_(film)"},
+{"week":18,"date":"2026-11-30","title":"Baby Boom","year":1987,"slug":"Baby_Boom_(film)"},
+{"week":19,"date":"2026-12-07","title":"Radio Days","year":1987,"slug":"Radio_Days"},
+{"week":20,"date":"2026-12-14","title":"Heaven","year":1987,"slug":"Heaven_(1987_film)"},
+{"week":21,"date":"2026-12-21","title":"The Good Mother","year":1988,"slug":"The_Good_Mother_(1988_film)"},
+{"week":22,"date":"2026-12-28","title":"The Lemon Sisters","year":1990,"slug":"The_Lemon_Sisters"},
+{"week":23,"date":"2027-01-04","title":"The Godfather Part III","year":1990,"slug":"The_Godfather_Part_III"},
+{"week":24,"date":"2027-01-11","title":"Father of the Bride","year":1991,"slug":"Father_of_the_Bride_(1991_film)"},
+{"week":25,"date":"2027-01-18","title":"Manhattan Murder Mystery","year":1993,"slug":"Manhattan_Murder_Mystery"},
+{"week":26,"date":"2027-01-25","title":"Look Who's Talking Now","year":1993,"slug":"Look_Who's_Talking_Now"},
+{"week":27,"date":"2027-02-01","title":"Father of the Bride Part II","year":1995,"slug":"Father_of_the_Bride_Part_II"},
+{"week":28,"date":"2027-02-08","title":"Unstrung Heroes","year":1995,"slug":"Unstrung_Heroes"},
+{"week":29,"date":"2027-02-15","title":"Marvin's Room","year":1996,"slug":"Marvin's_Room_(film)"},
+{"week":30,"date":"2027-02-22","title":"The First Wives Club","year":1996,"slug":"The_First_Wives_Club"},
+{"week":31,"date":"2027-03-01","title":"The Other Sister","year":1999,"slug":"The_Other_Sister"},
+{"week":32,"date":"2027-03-08","title":"Hanging Up","year":2000,"slug":"Hanging_Up_(film)"},
+{"week":33,"date":"2027-03-15","title":"Town & Country","year":2001,"slug":"Town_&_Country_(film)"},
+{"week":34,"date":"2027-03-22","title":"Something's Gotta Give","year":2003,"slug":"Something's_Gotta_Give_(film)"},
+{"week":35,"date":"2027-03-29","title":"The Family Stone","year":2005,"slug":"The_Family_Stone"},
+{"week":36,"date":"2027-04-05","title":"Rumor Has It","year":2005,"slug":"Rumor_Has_It"},
+{"week":37,"date":"2027-04-12","title":"Because I Said So","year":2007,"slug":"Because_I_Said_So"},
+{"week":38,"date":"2027-04-19","title":"Mama's Boy","year":2007,"slug":"Mama's_Boy_(2007_film)"},
+{"week":39,"date":"2027-04-26","title":"Mad Money","year":2008,"slug":"Mad_Money_(film)"},
+{"week":40,"date":"2027-05-03","title":"Smother","year":2008,"slug":"Smother_(film)"},
+{"week":41,"date":"2027-05-10","title":"Morning Glory","year":2010,"slug":"Morning_Glory_(2010_film)"},
+{"week":42,"date":"2027-05-17","title":"Darling Companion","year":2012,"slug":"Darling_Companion"},
+{"week":43,"date":"2027-05-24","title":"The Big Wedding","year":2013,"slug":"The_Big_Wedding"},
+{"week":44,"date":"2027-05-31","title":"And So It Goes","year":2014,"slug":"And_So_It_Goes_(film)"},
+{"week":45,"date":"2027-06-07","title":"5 Flights Up","year":2014,"slug":"5_Flights_Up"},
+{"week":46,"date":"2027-06-14","title":"Love the Coopers","year":2015,"slug":"Love_the_Coopers"},
+{"week":47,"date":"2027-06-21","title":"Finding Dory","year":2016,"slug":"Finding_Dory"},
+{"week":48,"date":"2027-06-28","title":"Hampstead","year":2017,"slug":"Hampstead_(film)"},
+{"week":49,"date":"2027-07-05","title":"Book Club","year":2018,"slug":"Book_Club_(film)"},
+{"week":50,"date":"2027-07-12","title":"Poms","year":2019,"slug":"Poms_(film)"},
+{"week":51,"date":"2027-07-19","title":"Mack & Rita","year":2022,"slug":"Mack_&_Rita"},
+{"week":52,"date":"2027-07-26","title":"Book Club: The Next Chapter","year":2023,"slug":"Book_Club:_The_Next_Chapter"},
+{"week":53,"date":"2027-08-02","title":"Maybe I Do","year":2023,"slug":"Maybe_I_Do_(film)"},
+{"week":54,"date":"2027-08-09","title":"Summer Camp","year":2024,"slug":"Summer_Camp_(2024_film)"},
+{"week":55,"date":"2027-08-16","title":"Arthur's Whisky","year":2024,"slug":"Arthur's_Whisky"}
+];
+
+const PARTY_DATE = new Date(new Date(MOVIES[MOVIES.length-1].date).getTime() + 7*86400000);
+
+/* ============================================================
+   STATE (per-browser only — "watched" checkmarks are local)
+   ============================================================ */
+const WATCHED_KEY = "keatonClubWatched";
+function getWatched(){ try{ return JSON.parse(localStorage.getItem(WATCHED_KEY) || "{}"); }catch(e){ return {}; } }
+function setWatched(obj){ localStorage.setItem(WATCHED_KEY, JSON.stringify(obj)); }
+
+/* ============================================================
+   DATE HELPERS
+   ============================================================ */
+function fmtDate(iso){
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+function currentWeekNumber(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  for(let i=MOVIES.length-1;i>=0;i--){
+    const wd = new Date(MOVIES[i].date + "T00:00:00");
+    if(today >= wd) return MOVIES[i].week;
+  }
+  return null;
+}
+
+/* ============================================================
+   POSTER PHOTOS
+   ------------------------------------------------------------
+   By default this pulls each film's real poster/still straight
+   from Wikipedia's public picture API (no key needed, works in
+   any normal browser with internet access — this is a live
+   network call, so it needs to be opened as an actual page, not
+   previewed inside a sandboxed viewer).
+
+   If a particular movie doesn't find a good image (some titles
+   are obscure enough that Wikipedia's article search misses),
+   or you just want to swap in a specific photo, paste a direct
+   image URL here. Right-click any photo online → "Copy image
+   address" → paste it as the value. Example:
+     const MANUAL_POSTERS = { 9: "https://example.com/annie-hall.jpg" };
+   The number is the week number from the schedule above.
+   ============================================================ */
+const MANUAL_POSTERS = {
+  // 9: "https://your-image-url-here.jpg",
+};
+
+const posterCache = {};
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error("timeout")), ms))
+  ]);
+}
+async function fetchSummary(title){
+  try{
+    const encoded = encodeURIComponent(title).replace(/%20/g, "_");
+    const res = await withTimeout(fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encoded, {headers:{accept:"application/json"}}), 6000);
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(data.thumbnail && data.thumbnail.source) return data.thumbnail.source;
+    return null;
+  }catch(e){ console.warn("poster lookup failed for", title, e); return null; }
+}
+async function openSearchFallback(title){
+  try{
+    const url = "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=1&namespace=0&search=" + encodeURIComponent(title + " film");
+    const res = await withTimeout(fetch(url), 6000);
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(data && data[1] && data[1][0]) return fetchSummary(data[1][0].replace(/ /g,"_"));
+    return null;
+  }catch(e){ console.warn("opensearch fallback failed for", title, e); return null; }
+}
+async function getPoster(movie){
+  if(MANUAL_POSTERS[movie.week]) return MANUAL_POSTERS[movie.week];
+  if(posterCache[movie.slug]) return posterCache[movie.slug];
+  const plainTitle = movie.title.replace(/ /g,"_");
+  let url = await fetchSummary(movie.slug);
+  if(!url) url = await fetchSummary(plainTitle + "_(film)");
+  if(!url) url = await fetchSummary(plainTitle + "_(" + movie.year + "_film)");
+  if(!url) url = await fetchSummary(plainTitle);
+  if(!url) url = await openSearchFallback(movie.title);
+  posterCache[movie.slug] = url;
+  return url;
+}
+
+/* ============================================================
+   STREAMING LINKS
+   ============================================================ */
+function justWatchUrl(title){
+  return "https://www.justwatch.com/us/search?q=" + encodeURIComponent(title);
+}
+function wikiUrl(slug){
+  return "https://en.wikipedia.org/wiki/" + slug;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const grid = document.getElementById("grid");
+let filterMode = "all";
+let searchTerm = "";
+
+function render(){
+  grid.innerHTML = "";
+  const watched = getWatched();
+  const curWeek = currentWeekNumber();
+  const term = searchTerm.trim().toLowerCase();
+
+  let list = MOVIES.filter(m=>{
+    if(term && !(m.title.toLowerCase().includes(term) || String(m.year).includes(term))) return false;
+    if(filterMode === "watched" && !watched[m.week]) return false;
+    if(filterMode === "upcoming" && watched[m.week]) return false;
+    return true;
+  });
+
+  if(list.length === 0){
+    grid.innerHTML = '<div class="empty-state">No films match — try clearing your search.</div>';
+    return;
+  }
+
+  list.forEach(m=>{
+    const card = document.createElement("div");
+    card.className = "card" + (watched[m.week] ? " watched" : "") + (m.week === curWeek ? " current" : "");
+    card.id = "week-" + m.week;
+
+    const term = "Week " + String(m.week).padStart(2,"0") + " — " + m.title;
+
+    card.innerHTML = `
+      <div class="card-main" data-week="${m.week}">
+        <div class="thumb" id="thumb-${m.week}"></div>
+        <div class="card-info">
+          <div class="week-label">Week ${m.week} · Week of ${fmtDate(m.date)}${m.week===curWeek ? " · ★ This week" : ""}</div>
+          <h3>${m.title} <span class="year">(${m.year})</span></h3>
+          <div class="card-actions">
+            <a href="${justWatchUrl(m.title)}" target="_blank" rel="noopener">📺 Where to stream</a>
+            <a href="${wikiUrl(m.slug)}" target="_blank" rel="noopener">ℹ️ About the film</a>
+            <span class="comment-toggle" data-week="${m.week}" data-term="${term}">💬 Comments</span>
+            <label class="watch-check"><input type="checkbox" data-week="${m.week}" ${watched[m.week] ? "checked" : ""}> Watched</label>
+          </div>
+        </div>
+      </div>
+      <div class="comments-panel" id="comments-${m.week}"></div>
+    `;
+    grid.appendChild(card);
+
+    getPoster(m).then(url=>{
+      const t = document.getElementById("thumb-" + m.week);
+      if(!t) return;
+      if(url){
+        const img = new Image();
+        img.onload = ()=>{ t.classList.add('loaded'); t.innerHTML = ''; t.appendChild(img); };
+        img.onerror = ()=>{ t.classList.add('loaded','placeholder'); t.textContent = m.title.trim()[0]; };
+        img.alt = m.title + " poster";
+        img.loading = "lazy";
+        img.src = url;
+      } else {
+        t.classList.add('loaded','placeholder');
+        t.textContent = m.title.trim()[0];
+      }
+    });
+  });
+
+  // Party card
+  const party = document.createElement("div");
+  party.className = "party-card";
+  party.innerHTML = `<h3>🎉 The Costume Party</h3><p>Week of ${PARTY_DATE.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} — come as Diane, or as any character she ever played!</p>`;
+  grid.appendChild(party);
+
+  // wire up checkboxes
+  grid.querySelectorAll('input[type=checkbox][data-week]').forEach(cb=>{
+    cb.addEventListener('click', e=> e.stopPropagation());
+    cb.addEventListener('change', e=>{
+      const w = e.target.dataset.week;
+      const watched = getWatched();
+      if(e.target.checked) watched[w] = true; else delete watched[w];
+      setWatched(watched);
+      updateStats();
+      render();
+    });
+  });
+
+  // wire up comment toggles
+  grid.querySelectorAll('.comment-toggle').forEach(el=>{
+    el.addEventListener('click', e=>{
+      e.stopPropagation();
+      const w = el.dataset.week;
+      const panel = document.getElementById('comments-' + w);
+      panel.classList.toggle('open');
+      if(panel.classList.contains('open') && !panel.dataset.loaded){
+        panel.dataset.loaded = "1";
+        loadComments(panel, el.dataset.term);
+      }
+    });
+  });
+}
+
+function loadComments(panel, term){
+  if(!GISCUS_CONFIGURED){
+    panel.innerHTML = '<div class="comments-placeholder">Comments aren\'t connected yet. Once the site is on GitHub Pages with giscus configured, everyone\'s comments will show up here — see the setup guide.</div>';
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = 'https://giscus.app/client.js';
+  script.setAttribute('data-repo', GISCUS_REPO);
+  script.setAttribute('data-repo-id', GISCUS_REPO_ID);
+  script.setAttribute('data-category', GISCUS_CATEGORY);
+  script.setAttribute('data-category-id', GISCUS_CATEGORY_ID);
+  script.setAttribute('data-mapping', 'specific');
+  script.setAttribute('data-term', term);
+  script.setAttribute('data-strict', '0');
+  script.setAttribute('data-reactions-enabled', '1');
+  script.setAttribute('data-emit-metadata', '0');
+  script.setAttribute('data-input-position', 'top');
+  script.setAttribute('data-theme', 'light');
+  script.setAttribute('data-lang', 'en');
+  script.setAttribute('crossorigin', 'anonymous');
+  script.async = true;
+  panel.appendChild(script);
+}
+
+function updateStats(){
+  const watched = getWatched();
+  const count = Object.keys(watched).length;
+  document.getElementById('statWatched').textContent = count;
+  document.getElementById('statTotal').textContent = MOVIES.length;
+  document.getElementById('statWeeks').textContent = MOVIES.length;
+  document.getElementById('statParty').textContent = PARTY_DATE.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('progressBar').style.width = Math.round((count / MOVIES.length) * 100) + "%";
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+document.getElementById('searchBox').addEventListener('input', e=>{
+  searchTerm = e.target.value;
+  render();
+});
+function setFilter(mode, btnId){
+  filterMode = mode;
+  document.querySelectorAll('.controls button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(btnId).classList.add('active');
+  render();
+}
+document.getElementById('filterAll').addEventListener('click', ()=>setFilter('all','filterAll'));
+document.getElementById('filterUpcoming').addEventListener('click', ()=>setFilter('upcoming','filterUpcoming'));
+document.getElementById('filterWatched').addEventListener('click', ()=>setFilter('watched','filterWatched'));
+document.getElementById('jumpCurrent').addEventListener('click', ()=>{
+  const w = currentWeekNumber();
+  if(w){
+    const el = document.getElementById('week-' + w);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+});
+
+updateStats();
+render();
+</script>
+</body>
+</html>
